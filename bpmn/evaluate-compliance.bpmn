@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL"
+                  xmlns:camunda="http://camunda.org/schema/1.0/bpmn"
+                  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                  id="completer-evaluate-compliance"
+                  targetNamespace="https://etzhayyim.com/bpmn/completer">
+
+  <!-- Single-DID compliance evaluation pipeline -->
+  <bpmn:process id="evaluateCompliance" name="Evaluate Compliance" isExecutable="true">
+    <bpmn:startEvent id="Start_Evaluate" name="Evaluate request received"/>
+    <bpmn:sequenceFlow id="f1" sourceRef="Start_Evaluate" targetRef="Task_QueryRules"/>
+
+    <bpmn:serviceTask id="Task_QueryRules" name="Query applicable rules"
+                      camunda:topic="com.etzhayyim.apps.completer.queryRules"/>
+    <bpmn:sequenceFlow id="f2" sourceRef="Task_QueryRules" targetRef="Task_MatchRules"/>
+
+    <bpmn:serviceTask id="Task_MatchRules" name="Match rules to actor"
+                      camunda:topic="com.etzhayyim.apps.completer.matchRules"/>
+    <bpmn:sequenceFlow id="f3" sourceRef="Task_MatchRules" targetRef="Task_LlmEvaluate"/>
+
+    <bpmn:serviceTask id="Task_LlmEvaluate" name="LLM compliance evaluation"
+                      camunda:topic="com.etzhayyim.apps.completer.llmEvaluate"/>
+    <bpmn:sequenceFlow id="f4" sourceRef="Task_LlmEvaluate" targetRef="Task_ScoreAndPersist"/>
+
+    <bpmn:serviceTask id="Task_ScoreAndPersist" name="Score and persist audit"
+                      camunda:topic="com.etzhayyim.apps.completer.evaluate"/>
+    <bpmn:sequenceFlow id="f5" sourceRef="Task_ScoreAndPersist" targetRef="End_Evaluated"/>
+
+    <bpmn:endEvent id="End_Evaluated" name="Audit persisted"/>
+  </bpmn:process>
+
+  <!-- Batch evaluation: fan-out per DID -->
+  <bpmn:process id="evaluateRepoDids" name="Evaluate Repo DIDs" isExecutable="true">
+    <bpmn:startEvent id="Start_Batch" name="Batch evaluation requested"/>
+    <bpmn:sequenceFlow id="b1" sourceRef="Start_Batch" targetRef="Task_BatchEvaluate"/>
+
+    <bpmn:serviceTask id="Task_BatchEvaluate" name="Batch DID evaluation"
+                      camunda:topic="com.etzhayyim.apps.completer.evaluateRepoDids"/>
+    <bpmn:sequenceFlow id="b2" sourceRef="Task_BatchEvaluate" targetRef="End_BatchDone"/>
+
+    <bpmn:endEvent id="End_BatchDone" name="Batch complete"/>
+  </bpmn:process>
+
+  <!-- Remediation recommendation -->
+  <bpmn:process id="remediate" name="Generate Remediation" isExecutable="true">
+    <bpmn:startEvent id="Start_Remediate" name="Remediation requested"/>
+    <bpmn:sequenceFlow id="r1" sourceRef="Start_Remediate" targetRef="Task_Remediate"/>
+
+    <bpmn:serviceTask id="Task_Remediate" name="Generate remediation plan"
+                      camunda:topic="com.etzhayyim.apps.completer.remediate"/>
+    <bpmn:sequenceFlow id="r2" sourceRef="Task_Remediate" targetRef="End_Remediated"/>
+
+    <bpmn:endEvent id="End_Remediated" name="Remediation plan persisted"/>
+  </bpmn:process>
+
+</bpmn:definitions>

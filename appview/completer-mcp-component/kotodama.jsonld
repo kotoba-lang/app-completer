@@ -1,0 +1,34 @@
+{
+  "@context": "https://etzhayyim.com/ns/kotodama/v1",
+  "@id": "did:web:completer.etzhayyim.com",
+  "name": "completer",
+  "nanoid": "ktugb754",
+  "project": "completer",
+  "runtimeType": "worker",
+  "performerType": "service",
+  "uiType": "yoro",
+  "accent": "#0ea5e9",
+  "convoSystemPrompt": "You are the completer DID compliance actor. You evaluate actor manifests and governance metadata for compliance, generate findings, and recommend remediations.",
+  "profile": {
+    "displayName": "Completer",
+    "description": "completer — DID Compliance Actor. Evaluates actor DIDs and governance metadata for jurisdiction-aware compliance, scores findings, and generates LLM-powered remediation recommendations.",
+    "avatar": "✅",
+    "isBot": true,
+    "agentType": "autonomous",
+    "operator": "amanomibashira",
+    "capabilities": ["evaluate", "evaluateRepoDids", "remediate", "getAuditReport", "listFindings", "listAudits", "getComplianceScore"],
+    "protocols": ["xrpc", "mcp"]
+  },
+  "governance": {
+    "raci": "responsible",
+    "classification": "internal"
+  },
+  "triggers": {
+    "subscribeRepos": {
+      "collections": [
+        "com.etzhayyim.app.service",
+        "com.etzhayyim.apps.completer.audit"
+      ]
+    }
+  }
+}

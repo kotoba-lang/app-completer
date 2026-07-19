@@ -1,0 +1,43 @@
+{
+  "name": "kotodama-ktugb754",
+  "main": "svelte/.svelte-kit/cloudflare/_worker.js",
+  "compatibility_date": "2025-03-17",
+  "compatibility_flags": [
+    "nodejs_compat",
+    "nodejs_als"
+  ],
+  "vars": {
+    "APP_CAPABILITIES": "[\"evaluate\",\"evaluateRepoDids\",\"remediate\",\"getAuditReport\",\"listFindings\",\"listAudits\",\"getComplianceScore\"]",
+    "APP_DESCRIPTION": "completer — DID Compliance Actor. Evaluates actor DIDs and governance metadata for jurisdiction-aware compliance, scores findings, and generates LLM-powered remediation recommendations.",
+    "APP_DISPLAY_NAME": "Completer",
+    "APP_FRAMEWORK": "sveltekit-edge-bff",
+    "APP_NANOID": "ktugb754",
+    "APP_PERFORMER_TYPE": "service",
+    "APP_UI_TYPE": "yoro",
+    "AGENTGATEWAY_MCP_ROUTER_URL": "https://mcp.etzhayyim.com/xrpc/com.etzhayyim.mcp.message"
+  },
+  "rules": [
+    {
+      "type": "CompiledWasm",
+      "globs": [
+        "**/*.wasm"
+      ]
+    }
+  ],
+  "routes": [
+    {
+      "pattern": "ktugb754.etzhayyim.com/*",
+      "zone_name": "etzhayyim.com"
+    },
+    {
+      "pattern": "completer.etzhayyim.com/*",
+      "zone_name": "etzhayyim.com"
+    }
+  ],
+  "assets": {
+    "directory": "./svelte/.svelte-kit/cloudflare/client",
+    "binding": "ASSETS",
+    "html_handling": "auto-trailing-slash",
+    "not_found_handling": "none"
+  }
+}
