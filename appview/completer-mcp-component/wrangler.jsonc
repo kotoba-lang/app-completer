@@ -1,6 +1,10 @@
+// Frontend migrated to cljs/ (reagent + re-frame + jp-go-dds; see cljs/src/completer/app.cljs).
+// "main" was dropped: the SvelteKit worker (svelte/.svelte-kit/cloudflare/_worker.js) no
+// longer exists, and src/app.ts (kept, unedited) is a thin XRPC dispatcher that does not
+// call env.ASSETS.fetch, so it must not be pointed at by "main" here.
+// UNVERIFIED: this config has not been exercised with `wrangler deploy` or `wrangler dev`.
 {
   "name": "kotodama-ktugb754",
-  "main": "svelte/.svelte-kit/cloudflare/_worker.js",
   "compatibility_date": "2025-03-17",
   "compatibility_flags": [
     "nodejs_compat",
@@ -10,7 +14,7 @@
     "APP_CAPABILITIES": "[\"evaluate\",\"evaluateRepoDids\",\"remediate\",\"getAuditReport\",\"listFindings\",\"listAudits\",\"getComplianceScore\"]",
     "APP_DESCRIPTION": "completer — DID Compliance Actor. Evaluates actor DIDs and governance metadata for jurisdiction-aware compliance, scores findings, and generates LLM-powered remediation recommendations.",
     "APP_DISPLAY_NAME": "Completer",
-    "APP_FRAMEWORK": "sveltekit-edge-bff",
+    "APP_FRAMEWORK": "cljs-reagent-re-frame-jp-go-dds",
     "APP_NANOID": "ktugb754",
     "APP_PERFORMER_TYPE": "service",
     "APP_UI_TYPE": "yoro",
@@ -35,7 +39,7 @@
     }
   ],
   "assets": {
-    "directory": "./svelte/.svelte-kit/cloudflare/client",
+    "directory": "./cljs/public",
     "binding": "ASSETS",
     "html_handling": "auto-trailing-slash",
     "not_found_handling": "none"
