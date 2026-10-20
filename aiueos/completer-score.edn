@@ -1,0 +1,17 @@
+;; app-completer — itonami（dapp）の aiueos アプリ記述子（notes.edn 形）。
+;; 判定コアは aiueos/completer_score.cljk（減点式・下限・effect 判定）。
+;; 正本は AGENTS.md の Score Calculation（設計の唯一の正本）。pure（:effects #{}）。
+{:aiueos/component :app/completer-score
+ :aiueos/kind :app
+ :aiueos/trust :untrusted
+ :aiueos/source "completer_score.cljk"
+ :aiueos/wasm "completer_score.wasm"
+ :aiueos/entry "main"
+ :aiueos/args []
+ :aiueos/imports #{}
+ :aiueos/exports #{:app/main
+                   :app/deduction-of
+                   :app/score-after
+                   :app/effect-code}
+ :aiueos/effects #{}
+ :aiueos/limits {:memory-pages 16 :fuel 5000000}}
