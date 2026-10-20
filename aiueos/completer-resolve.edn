@@ -1,0 +1,19 @@
+;; app-completer — itonami（dapp）の aiueos アプリ記述子（notes.edn 形）。
+;; 判定コアは aiueos/completer_resolve.cljk（finding 状態遷移・score 判定）。
+;; 正本は kotoba/src/registry.ts + types.ts。pure（:effects #{}）。
+;; 評価専門（ingest はしない）。
+{:aiueos/component :app/completer-resolve
+ :aiueos/kind :app
+ :aiueos/trust :untrusted
+ :aiueos/source "completer_resolve.cljk"
+ :aiueos/wasm "completer_resolve.wasm"
+ :aiueos/entry "main"
+ :aiueos/args []
+ :aiueos/imports #{}
+ :aiueos/exports #{:app/main
+                   :app/resolve-judgment
+                   :app/resolution-admissible
+                   :app/score-ok
+                   :app/score-take}
+ :aiueos/effects #{}
+ :aiueos/limits {:memory-pages 16 :fuel 5000000}}

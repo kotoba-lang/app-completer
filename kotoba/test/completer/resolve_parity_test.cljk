@@ -1,0 +1,27 @@
+(ns completer.resolve-parity-test
+  "aiueos/completer_resolve.cljk（判定コア）と正本（registry.ts / types.ts）の
+  parity。状態遷移・score 範囲・集計規則が変われば落ちる drift 検査。"
+  (:require [clojure.test :refer [deftest is testing]]
+            [clojure.string :as str]
+            ["fs" :as fs]))
+
+(def registry
+  (fs/readFileSync (str/join "/" ["kotoba" "src" "registry.ts"]) "utf8"))
+(def types-src
+  (fs/readFileSync (str/join "/" ["kotoba" "src" "types.ts"]) "utf8"))
+
+(deftest resolve-rules-match-guest
+  (testing "guest test-resolution: 解決は remediated / accepted / wontfix のみ"
+    (is (str/includes? registry "remediated"))
+    (is (str/includes? registry "accepted"))
+    (is (str/includes? registry "wontfix"))
+    (is (str/includes? registry "invalidResolution")))
+  (testing "guest test-fail-closed / test-order: open のみ解決可・拒否順"
+    (is (str/includes? registry "findingNotOpen"))
+    (is (str/includes? registry "findingNotFound"))
+    (is (str/includes? registry "invalidFindingId")))
+  (testing "guest test-score: score は 0..100 の整数"
+    (is (str/includes? types-src "n >= 0 && n <= 100")))
+  (testing "guest test-score-take: 集計は completed audit の最新"
+    (is (str/includes? registry "completed"))
+    (is (str/includes? registry "latestFinishedAt"))))

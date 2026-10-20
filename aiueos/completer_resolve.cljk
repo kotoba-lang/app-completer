@@ -1,0 +1,76 @@
+(ns completer.resolve
+  "completer 判定コア — itonami dapp bundle（pure, :effects #{}）。
+
+  コンプライアンス audit / finding の判定（正本: kotoba/src/registry.ts +
+  types.ts。評価専門 — ingest はしない）:
+
+  - **finding の状態遷移は open のみ解決可**: open → remediated / accepted /
+    wontfix（閉じた 3 つ）。解決済みの再解決は拒否
+    （findingNotOpen:現状態）。resolution に open は指定できない。
+  - **score は 0..100 の整数**。
+  - **スコア集計は completed audit の最新 finishedAt のものが採用** ——
+    running 中の score は数えない。
+
+  resolve-judgment の戻り: 0 = 解決 / 1 = invalid-finding-id
+    / 2 = invalid-resolution / 3 = not-found / 4 = not-open
+    （正本の拒否順: id → resolution → 見つからない → open でない）
+  resolution-admissible: 1 = 0 remediated / 1 accepted / 2 wontfix の内
+  score-ok: 1 = 0..100 の整数
+  score-take: 1 = この audit の score を採用（completed・score 有り・最新）
+
+  実行 host はスカラーのみ = KIR v3 / i64/direct ABI（kernel/selfhost 両対応）。
+
+  テストはゼロ引数 test-*、戻り 1/0:
+  <amu> test aiueos/completer_resolve.cljk"
+  (:export [main resolve-judgment resolution-admissible score-ok score-take
+            test-resolve test-order test-resolution test-score
+            test-score-take test-fail-closed]))
+
+(defn main [] :i64
+  0)
+
+(defn resolution-admissible [resolution-code :i64] :i64
+  (if (and (>= resolution-code 0) (<= resolution-code 2)) 1 0))
+
+(defn resolve-judgment [has-id :i64 resolution-code :i64 has-finding :i64 is-open :i64] :i64
+  (if (= has-id 0)
+    1
+    (if (= (resolution-admissible resolution-code) 0)
+      2
+      (if (= has-finding 0)
+        3
+        (if (= is-open 1) 0 4)))))
+
+(defn score-ok [score :i64] :i64
+  (if (and (>= score 0) (<= score 100)) 1 0))
+
+(defn score-take [is-completed :i64 has-score :i64 is-newest :i64] :i64
+  (if (and (= is-completed 1) (= has-score 1) (= is-newest 1)) 1 0))
+
+;; --- tests（戻り 1 = pass） ------------------------------------------------
+
+(defn test-resolve [] :i64
+  (if (= (resolve-judgment 1 0 1 1) 0) 1 0))
+
+(defn test-order [] :i64
+  ;; 拒否順: id → resolution → not-found → not-open
+  (if (= (+ (resolve-judgment 0 0 1 1) (resolve-judgment 1 9 1 1)
+            (resolve-judgment 1 0 0 1) (resolve-judgment 1 0 1 0))
+         10)
+    1 0))
+
+(defn test-resolution [] :i64
+  ;; remediated / accepted / wontfix のみ（open 指定は不可）
+  (if (= (+ (resolution-admissible 0) (resolution-admissible 2) (resolution-admissible 3)) 2) 1 0))
+
+(defn test-score [] :i64
+  ;; 0..100 の整数
+  (if (= (+ (score-ok 0) (score-ok 100) (score-ok 101) (score-ok -1)) 2) 1 0))
+
+(defn test-score-take [] :i64
+  ;; completed・score 有り・最新のときだけ採用（running は数えない）
+  (if (= (+ (score-take 1 1 1) (score-take 0 1 1) (score-take 1 0 1) (score-take 1 1 0)) 1) 1 0))
+
+(defn test-fail-closed [] :i64
+  ;; 解決済み（open でない）の再解決は拒否
+  (if (= (resolve-judgment 1 1 1 0) 4) 1 0))
