@@ -1,0 +1,67 @@
+(ns completer.score
+  "completer スコア判定コア — itonami dapp bundle（pure, :effects #{}）。
+
+  コンプライアンス評価のスコアと effect の判定（正本: AGENTS.md の
+  Evaluation Flow「5. Score Calculation」= 設計の唯一の正本）:
+
+  - **減点式**: critical -25 / high -15 / medium -5 / low -2。**下限 0**
+    （負のスコアは無い）。
+  - **effect**: critical があれば deny。high か medium があれば
+    allow-with-obligations。無ければ allow。
+
+  deduction-of の戻り: 0 critical=25 / 1 high=15 / 2 medium=5 / 3 low=2
+    / それ以外 = 0（減点しない — info 等）
+  score-after: max(0, score - 減点合計)
+  effect-code の戻り: 0 allow / 1 allow-with-obligations / 2 deny
+
+  実行 host はスカラーのみ = KIR v3 / i64/direct ABI（kernel/selfhost 両対応）。
+
+  テストはゼロ引数 test-*、戻り 1/0:
+  <amu> test aiueos/completer_score.cljk"
+  (:export [main deduction-of score-after effect-code
+            test-deduction test-floor test-effect test-effect-precedence
+            test-fail-closed]))
+
+(defn main [] :i64
+  0)
+
+(defn deduction-of [sev-code :i64] :i64
+  (if (= sev-code 0)
+    25
+    (if (= sev-code 1)
+      15
+      (if (= sev-code 2)
+        5
+        (if (= sev-code 3) 2 0)))))
+
+(defn score-after [score :i64 total-deductions :i64] :i64
+  (if (< (- score total-deductions) 0) 0 (- score total-deductions)))
+
+(defn effect-code [has-critical :i64 has-high :i64 has-medium :i64] :i64
+  (if (= has-critical 1)
+    2
+    (if (or (= has-high 1) (= has-medium 1))
+      1
+      0)))
+
+;; --- tests（戻り 1 = pass） ------------------------------------------------
+
+(defn test-deduction [] :i64
+  ;; critical 25 / high 15 / medium 5 / low 2 / info 0
+  (if (= (+ (deduction-of 0) (deduction-of 1) (deduction-of 2) (deduction-of 3) (deduction-of 9)) 47) 1 0))
+
+(defn test-floor [] :i64
+  ;; 下限 0（負のスコアは無い）
+  (if (= (+ (score-after 10 25) (score-after 25 25) (score-after 30 25)) 5) 1 0))
+
+(defn test-effect [] :i64
+  ;; critical → deny / high・medium → allow-with-obligations / 何も無し → allow
+  (if (= (+ (effect-code 1 0 0) (effect-code 0 1 0) (effect-code 0 0 1) (effect-code 0 0 0)) 4) 1 0))
+
+(defn test-effect-precedence [] :i64
+  ;; critical が最優先
+  (if (= (effect-code 1 1 1) 2) 1 0))
+
+(defn test-fail-closed [] :i64
+  ;; unknown severity は減点しない（既定を作らない）
+  (if (= (+ (deduction-of -1) (deduction-of 4)) 0) 1 0))

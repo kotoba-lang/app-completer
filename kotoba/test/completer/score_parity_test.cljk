@@ -1,0 +1,20 @@
+(ns completer.score-parity-test
+  "aiueos/completer_score.cljk（判定コア）と正本（AGENTS.md の Score
+  Calculation = 設計の唯一の正本）の parity。減点式・下限・effect が変われば
+  落ちる drift 検査。"
+  (:require [clojure.test :refer [deftest is testing]]
+            [clojure.string :as str]
+            ["fs" :as fs]))
+
+(def agents (fs/readFileSync "AGENTS.md" "utf8"))
+
+(deftest score-rules-match-guest
+  (testing "guest test-deduction / test-floor: 減点式と下限 0"
+    (is (str/includes? agents "critical: -25"))
+    (is (str/includes? agents "high: -15"))
+    (is (str/includes? agents "medium: -5"))
+    (is (str/includes? agents "low: -2"))
+    (is (str/includes? agents "min 0")))
+  (testing "guest test-effect / test-effect-precedence: effect の 3 段"
+    (is (str/includes? agents "deny (critical)"))
+    (is (str/includes? agents "allow-with-obligations (high/medium)"))))
